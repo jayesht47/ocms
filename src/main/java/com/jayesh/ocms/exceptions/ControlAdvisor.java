@@ -23,4 +23,13 @@ public class ControlAdvisor {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
     }
 
+    @ExceptionHandler(exception = NotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<Map<String, Object>> notFoundExceptionHandler(NotFoundException e) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("error", true);
+        map.put("message", e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(map);
+    }
+
 }
