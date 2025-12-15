@@ -1,9 +1,10 @@
 package com.jayesh.ocms.services;
 
+import com.jayesh.ocms.dto.UpdateUserDTO;
 import com.jayesh.ocms.entities.User;
 import com.jayesh.ocms.exceptions.NotFoundException;
 import com.jayesh.ocms.repositories.UserRepository;
-import com.jayesh.ocms.vo.AuthUser;
+import com.jayesh.ocms.dto.AuthUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -46,8 +47,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getUserByUserName(String userName) {
-        return null;
+    public User getUserByUserName(String userName) throws NotFoundException {
+        Optional<User> userOptional = userRepository.findByUserName(userName);
+        if (userOptional.isPresent()) return userOptional.get();
+        else throw new NotFoundException("User with userName : " + userName + " not found");
     }
 
     @Override
@@ -60,5 +63,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean deleteUserByUserName(String userName) {
         return false;
+    }
+
+    @Override
+    public User updateUser(UpdateUserDTO updateUser, String userId) throws NotFoundException {
+        User user = getUserByUserId(userId);
+
+        if (updateUser.getDisplayName() != null) user.setDisplayName(updateUser.getDisplayName());
+        if (updateUser.getEmail() != null) user.setEmail(updateUser.getEmail());
+        if (updateUser.getUsername() != null) user.setUserName(updateUser.getUsername());
+
+        userRepository.save(user);
+
+        return user;
     }
 }

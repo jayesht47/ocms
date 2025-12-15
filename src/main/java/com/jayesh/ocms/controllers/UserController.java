@@ -1,10 +1,11 @@
 package com.jayesh.ocms.controllers;
 
 
+import com.jayesh.ocms.dto.UpdateUserDTO;
 import com.jayesh.ocms.entities.User;
 import com.jayesh.ocms.exceptions.NotFoundException;
 import com.jayesh.ocms.services.UserService;
-import com.jayesh.ocms.vo.AuthUser;
+import com.jayesh.ocms.dto.AuthUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,11 @@ public class UserController {
         return userService.createUser(user);
     }
 
+
+    @PutMapping("/{userId}")
+    public User updateUser(@PathVariable("userId") String userId, @RequestBody UpdateUserDTO updateUser) throws NotFoundException {
+        return userService.updateUser(updateUser, userId);
+    }
 
     @GetMapping("/{userId}")
     public User getUserByUserId(@PathVariable("userId") String userId) throws NotFoundException {
