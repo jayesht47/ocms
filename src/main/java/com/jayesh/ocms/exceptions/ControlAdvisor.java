@@ -43,4 +43,11 @@ public class ControlAdvisor {
     }
 
 
+    @ExceptionHandler(exception = RegistrationValidationException.class)
+    public ResponseEntity<Map<String, Object>> registrationValidationExceptionHandler(RegistrationValidationException e) {
+        Map<String, Object> map = new HashMap<>();
+        map.put(ERROR, true);
+        map.put(ERROR_MESSAGE, e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
+    }
 }
