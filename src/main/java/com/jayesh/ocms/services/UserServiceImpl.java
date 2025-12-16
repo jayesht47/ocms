@@ -3,8 +3,9 @@ package com.jayesh.ocms.services;
 import com.jayesh.ocms.dto.UpdateUserDTO;
 import com.jayesh.ocms.entities.User;
 import com.jayesh.ocms.exceptions.NotFoundException;
+import com.jayesh.ocms.exceptions.RegistrationValidationException;
 import com.jayesh.ocms.repositories.UserRepository;
-import com.jayesh.ocms.dto.AuthUser;
+import com.jayesh.ocms.dto.RegisterUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,8 +24,12 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
+    private static final String NOT_FOUND = " not found";
+
     @Override
-    public User createUser(AuthUser user) {
+    public User createUser(RegisterUser user) throws RegistrationValidationException {
+
+        userCreationValidation(user);
 
         BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
 
@@ -34,6 +39,7 @@ public class UserServiceImpl implements UserService {
         newUser.setDisplayName(user.getUserName());
         newUser.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         newUser.setRoles(List.of(user.getRole()));
+        newUser.setEmail(user.getEmail());
 
         //basic params
         newUser.setEnabled(Boolean.TRUE);
@@ -50,20 +56,24 @@ public class UserServiceImpl implements UserService {
     public User getUserByUserName(String userName) throws NotFoundException {
         Optional<User> userOptional = userRepository.findByUserName(userName);
         if (userOptional.isPresent()) return userOptional.get();
-        else throw new NotFoundException("User with userName : " + userName + " not found");
+        else throw new NotFoundException("User with userName : " + userName + NOT_FOUND);
     }
 
     @Override
     public User getUserByUserId(String userId) throws NotFoundException {
         Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isPresent()) return userOptional.get();
-        else throw new NotFoundException("User with id : " + userId + " not found");
+        else throw new NotFoundException("User with id : " + userId + NOT_FOUND);
     }
 
+
     @Override
-    public boolean deleteUserByUserName(String userName) {
-        return false;
+    public void deleteUserByUserId(String userId) throws NotFoundException {
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isPresent()) userRepository.delete(userOptional.get());
+        else throw new NotFoundException("User with id : " + userId + NOT_FOUND);
     }
+
 
     @Override
     public User updateUser(UpdateUserDTO updateUser, String userId) throws NotFoundException {
@@ -76,5 +86,14 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         return user;
+    }
+
+    private void userCreationValidation(RegisterUser registerUser) throws RegistrationValidationException {
+        String userName = registerUser.getUserName();
+        String email = registerUser.getEmail();
+        if (userRepository.findByUserName(userName).isPresent())
+            throw new RegistrationValidationException("username already taken");
+        if (userRepository.findByEmail(email).isPresent())
+            throw new RegistrationValidationException("email already taken");
     }
 }
