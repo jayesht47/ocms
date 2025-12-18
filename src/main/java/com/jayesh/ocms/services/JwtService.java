@@ -49,7 +49,7 @@ public class JwtService {
         return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
     }
 
-    private Boolean isTokenExpired(String token) {
+    public Boolean isTokenExpired(String token) {
         Date tokenExpiry = extractClaim(token, Claims::getExpiration);
         return tokenExpiry.before(new Date());
     }
