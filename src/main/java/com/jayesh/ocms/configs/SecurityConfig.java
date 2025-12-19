@@ -5,6 +5,8 @@ import com.jayesh.ocms.filters.LoggingFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -21,6 +23,8 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final LoggingFilter loggingFilter;
 
+    private static final String ADMIN = "ADMIN";
+
     public SecurityConfig(JwtAuthFilter jwtAuthFilter, LoggingFilter loggingFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.loggingFilter = loggingFilter;
@@ -32,8 +36,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/", "/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/user/*").authenticated()
-                        .requestMatchers("/user").hasRole("ADMIN")
-                        .requestMatchers("/user/**").hasRole("ADMIN")
+                        .requestMatchers("/user/**").hasRole(ADMIN)
                         .requestMatchers("/", "/content/*").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -45,6 +48,16 @@ public class SecurityConfig {
                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
+    }
+
+    @Bean
+    static RoleHierarchy roleHierarchy() {
+        return RoleHierarchyImpl.withDefaultRolePrefix()
+                .role("SUPER_ADMIN").implies(ADMIN)
+                .role(ADMIN).implies("AUTHOR")
+                .role("AUTHOR").implies("USER")
+                .role("USER").implies("GUEST")
+                .build();
     }
 
 }
