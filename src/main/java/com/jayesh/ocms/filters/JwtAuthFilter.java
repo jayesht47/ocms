@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -46,14 +47,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 User user = userService.getUserByUserName(userName);
                 List<String> roles = user.getRoles();
                 Collection<SimpleGrantedAuthority> authorities = roles.stream()
-                        .map(SimpleGrantedAuthority::new)
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                         .toList();
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userName, null
                         , authorities);
 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                SecurityContext context = SecurityContextHolder.createEmptyContext();
+                context.setAuthentication(authToken);
+                SecurityContextHolder.setContext(context);
+                customLogger.info("Set auth context for user : {}", userName);
             } catch (NotFoundException e) {
                 customLogger.error("User with username {} not found", userName);
             }
