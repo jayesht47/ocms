@@ -6,6 +6,7 @@ import com.jayesh.ocms.services.JwtService;
 import com.jayesh.ocms.services.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -19,8 +20,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -71,9 +74,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     private String getJwtTokenFromRequest(HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        if (token != null && token.startsWith("Bearer")) {
-            return token.substring(7);
+        Optional<Cookie> authTokenCookie = Optional.empty();
+        if (request.getCookies() != null)
+            authTokenCookie = Arrays.stream(request.getCookies())
+                    .filter(cookie -> cookie.getName().equals("auth_token"))
+                    .findFirst();
+        if (authTokenCookie.isPresent()) return authTokenCookie.get().getValue();
+        else {
+            String token = request.getHeader("Authorization");
+            if (token != null && token.startsWith("Bearer")) {
+                return token.substring(7);
+            }
         }
         return null;
     }
