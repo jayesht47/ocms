@@ -47,6 +47,12 @@ public class UserController {
         return userService.getUserByUserId(userId);
     }
 
+    @GetMapping("/currentUser")
+    public User getCurrentLoggedInUser() throws NotFoundException {
+        String currentLoggedInUserName = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userService.getUserByUserName(currentLoggedInUserName);
+    }
+
     @DeleteMapping("/{userId}")
     public void deleteUserById(@PathVariable("userId") String userId) throws NotFoundException {
         String currentLoggedInUserName = SecurityContextHolder.getContext().getAuthentication().getName();
